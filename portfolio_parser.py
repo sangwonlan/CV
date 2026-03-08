@@ -22,6 +22,37 @@ SKILL_REJECT_SUBSTRINGS = (
     "구현",
 )
 
+SKILL_REJECT_EXACT = {
+    "스위핑",
+    "홈 페그보드",
+    "페그보드",
+    "fma",
+    "wmft",
+    "copm",
+    "msrt",
+    "moca",
+    "mmse",
+}
+
+UPPERCASE_SKILL_ALLOWLIST = {
+    "AI",
+    "API",
+    "AWS",
+    "CSS",
+    "ETL",
+    "GPT",
+    "HTML",
+    "IT",
+    "LLM",
+    "ML",
+    "NLP",
+    "R",
+    "SAS",
+    "SQL",
+    "UI",
+    "UX",
+}
+
 def parse_portfolio_text(text):
     """
     포트폴리오 텍스트를 섹션별로 파싱하여 딕셔너리로 반환.
@@ -434,7 +465,7 @@ def normalize_skill_name(skill):
     clean = skill.strip()
     clean = re.sub(r'^[>\-*•\d.\s`]+', '', clean)
     clean = clean.replace("**", "").replace("__", "").replace("`", "")
-    clean = re.sub(r'\s+', ' ', clean).strip(" ,;:/")
+    clean = re.sub(r'\s+', ' ', clean).strip(" ,;:/()[]")
     if "(" in clean:
         base = clean.split("(", 1)[0].strip()
         if base:
@@ -453,7 +484,13 @@ def is_valid_skill_name(skill):
         return False
     if re.search(r'[.!?]', skill):
         return False
-    return not any(token in skill for token in SKILL_REJECT_SUBSTRINGS)
+    if skill.casefold() in SKILL_REJECT_EXACT:
+        return False
+    if any(token in skill for token in SKILL_REJECT_SUBSTRINGS):
+        return False
+    if re.fullmatch(r'[A-Z]{2,5}', skill) and skill not in UPPERCASE_SKILL_ALLOWLIST:
+        return False
+    return True
 
 
 def normalize_skills(skills):
@@ -604,6 +641,7 @@ def parse_activities(content):
         activities.append(current)
 
     return activities
+
 
 
 
